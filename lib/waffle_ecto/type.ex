@@ -13,14 +13,14 @@ defmodule Waffle.Ecto.Type do
     cast(definition, %{"file_name" => file, "updated_at" => updated_at})
   end
 
-  def cast(_definition, %{"file_name" => file, "updated_at" => updated_at}) do
-    {:ok, %{file_name: file, updated_at: updated_at}}
+  def cast(definition, %{"file_name" => file, "updated_at" => updated_at}) do
+    {:ok, %{file_name: file, updated_at: updated_at, uploader: definition}}
   end
 
   def cast(definition, args) do
     case definition.store(args) do
       {:ok, file} ->
-        {:ok, %{file_name: file, updated_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)}}
+        {:ok, %{file_name: file, updated_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second), uploader: definition}}
 
       {:error, message} = error when is_binary(message) ->
         log_error(error)
@@ -36,7 +36,7 @@ defmodule Waffle.Ecto.Type do
     end
   end
 
-  def load(_definition, value) do
+  def load(definition, value) do
     {file_name, gsec} =
       case Regex.match?(@filename_with_timestamp, value) do
         true ->
@@ -56,7 +56,7 @@ defmodule Waffle.Ecto.Type do
         nil
     end
 
-    {:ok, %{file_name: file_name, updated_at: updated_at}}
+    {:ok, %{file_name: file_name, updated_at: updated_at, uploader: definition}}
   end
 
   def dump(_definition, %{file_name: file_name, updated_at: nil}) do
